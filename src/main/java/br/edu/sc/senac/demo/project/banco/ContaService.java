@@ -28,35 +28,47 @@ public class ContaService {
 	}
 
 	@GetMapping("Saque/{numeroConta}/{ValorSaque}")
-	public ResponseEntity<Conta> efetuarSaque(@RequestBody Conta conta) {
-		String buscaNumeroConta = conta.getNumeroConta();
-		if (contas.containsKey(buscaNumeroConta)) {
-			Conta contaAtual = contas.get(buscaNumeroConta);
-			efetuarSaque(contaAtual);
-			return new ResponseEntity<>(HttpStatus.OK);
+	public ResponseEntity<Conta> efetuarSaque(@RequestBody String buscaNumeroConta, @PathVariable double valorSaque) {
+		
+		if (!contas.containsKey(buscaNumeroConta)) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
-		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		Conta conta = contas.get(buscaNumeroConta);
+		conta.sacar(valorSaque);
+		return new ResponseEntity<>(conta, HttpStatus.OK);
 	}
 
-	@GetMapping("Deposito/{numeroContaOrigem}/{numeroContaDestino}/{ValorTransferencia}")
+	@GetMapping("transferencia/{numeroContaOrigem}/{numeroContaDestino}/{ValorTransferencia}")
 	public ResponseEntity<Conta> efetuarTransferencia(@RequestBody String numeroContaOrigem,
-			@RequestBody String numeroContaDestino) {
-		if (contas.containsKey(numeroContaDestino)) {
-			efetuarTransferencia(numeroContaOrigem, numeroContaDestino);
-			return new ResponseEntity<>(HttpStatus.OK);
+			@RequestBody String numeroContaDestino, @PathVariable double valor) {
+		if (!contas.containsKey(numeroContaDestino) || !contas.containsKey(numeroContaOrigem)) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
-		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		Conta contaDestino = contas.get(numeroContaDestino);
+		contas.get(numeroContaOrigem).transferirPara(contaDestino, valor);
+		return new ResponseEntity<>(contaDestino, HttpStatus.OK);
+	}
+
+	@GetMapping("transferencia/{numeroContaOrigem}/{numeroContaDestino}/{ValorTransferencia}")
+	public ResponseEntity<Conta> efetuarDeposito(@RequestBody String numeroContaOrigem,
+			@PathVariable double valorDeposito) {
+		if (!contas.containsKey(numeroContaOrigem)) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		}
+		Conta conta = contas.get(numeroContaOrigem);
+		conta.depositar(valorDeposito);
+		return new ResponseEntity<>(conta, HttpStatus.OK);
 	}
 
 	@GetMapping("dadosConta/{numeroConta}")
 	public ResponseEntity<Conta> imprimirDados(@RequestBody Conta conta, @RequestBody String numeroConta) {
-		if (contas.containsKey(numeroConta)) {
-			String texto = conta.toString();
-			JOptionPane.showMessageDialog(null, texto);
-			System.out.println(texto);
-			return new ResponseEntity<>(HttpStatus.OK);
+		if (!contas.containsKey(numeroConta)) {
+			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 		}
-		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+		String texto = conta.toString();
+		JOptionPane.showMessageDialog(null, texto);
+		System.out.println(texto);
+		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
 }
